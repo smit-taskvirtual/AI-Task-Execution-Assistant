@@ -1,86 +1,78 @@
 import { useState } from "react";
-import api from "./services/api";
+import axios from "axios";
+import ReactMarkdown from "react-markdown";
 
 function App() {
   const [taskEmail, setTaskEmail] = useState("");
   const [previousEmails, setPreviousEmails] = useState("");
-  const [progress, setProgress] = useState("");
-
   const [files, setFiles] = useState([]);
-  const [uploadResult, setUploadResult] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleFiles = (e) => {
-    setFiles(Array.from(e.target.files));
+  const handleFileChange = (e) => {
+    setFiles([...e.target.files]);
   };
 
-  const analyzeTask = async () => {
+  const handleAnalyze = async () => {
     try {
       setLoading(true);
 
-      const formData = new FormData();
-
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
-
-      const response = await api.post(
-        "/upload",
-        formData,
+      const response = await axios.post(
+        "http://localhost:5000/api/analyze-task",
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          taskEmail,
+          previousEmails,
+          attachments: files
+            .map((f) => f.name)
+            .join(", "),
         }
       );
 
-      setUploadResult(response.data);
+      setAnalysis(response.data.analysis);
     } catch (error) {
       console.error(error);
-
-      alert(
-        error?.response?.data?.message ||
-          "Upload failed"
-      );
+      alert("Analysis Failed");
     } finally {
       setLoading(false);
     }
   };
 
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        analysis?.clientReply || ""
+      );
+
+      alert("Email copied to clipboard");
+    } catch {
+      alert("Failed to copy");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
       <div className="max-w-7xl mx-auto p-6">
 
-        {/* Header */}
+        {/* HEADER */}
 
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8">
+          <h1 className="text-5xl font-bold tracking-tight">
+            AI Task Execution Assistant
+          </h1>
 
-          <div>
-            <h1 className="text-4xl font-bold text-slate-900">
-              AI Task Execution Assistant
-            </h1>
-
-            <p className="text-slate-500 mt-2">
-              TaskVirtual Internal Productivity Tool
-            </p>
-          </div>
-
-          <div className="bg-white px-4 py-2 rounded-xl shadow">
-            <span className="text-sm text-slate-500">
-              Version 1.0
-            </span>
-          </div>
-
+          <p className="text-slate-600 mt-2">
+            TaskVirtual Internal Productivity Tool
+          </p>
         </div>
 
-        {/* Input Section */}
+        {/* INPUT SECTION */}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid lg:grid-cols-3 gap-6">
 
-          <div className="bg-white rounded-xl p-6 shadow">
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
 
-            <h2 className="text-xl font-semibold mb-4">
-              Task Input
+            <h2 className="text-xl font-bold mb-5">
+              Task Information
             </h2>
 
             <label className="font-medium">
@@ -89,247 +81,174 @@ function App() {
 
             <textarea
               rows={8}
-              className="w-full mt-2 border rounded-lg p-3"
               value={taskEmail}
               onChange={(e) =>
                 setTaskEmail(e.target.value)
               }
-              placeholder="Paste the client email here..."
+              className="w-full border rounded-xl p-3 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Paste client email here..."
             />
 
-            <div className="mt-4">
-
+            <div className="mt-5">
               <label className="font-medium">
-                Previous Email Thread
+                Previous Emails
               </label>
 
               <textarea
                 rows={6}
-                className="w-full mt-2 border rounded-lg p-3"
                 value={previousEmails}
                 onChange={(e) =>
                   setPreviousEmails(e.target.value)
                 }
+                className="w-full border rounded-xl p-3 mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Paste previous conversation..."
               />
-
             </div>
 
-            <div className="mt-4">
+            <div className="mt-5">
 
               <label className="font-medium">
                 Attachments
               </label>
 
-              <div className="mt-3 border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50">
+              <div className="mt-2 border-2 border-dashed border-slate-300 rounded-xl p-6 bg-slate-50">
 
                 <input
                   type="file"
                   multiple
-                  onChange={handleFiles}
+                  onChange={handleFileChange}
                   className="w-full"
                 />
 
-                <p className="text-sm text-slate-500 mt-2">
-                  Upload PDF, DOCX, XLSX or TXT files
-                </p>
+                {files.length > 0 && (
+                  <div className="mt-4 space-y-2">
+
+                    {files.map((file) => (
+                      <div
+                        key={file.name}
+                        className="bg-white border rounded-lg px-3 py-2 text-sm"
+                      >
+                        📄 {file.name}
+                      </div>
+                    ))}
+
+                  </div>
+                )}
 
               </div>
-
-              {files.length > 0 && (
-                <div className="mt-4 bg-slate-50 p-3 rounded-lg">
-
-                  <h4 className="font-medium mb-2">
-                    Selected Files
-                  </h4>
-
-                  {files.map((file, index) => (
-                    <div
-                      key={index}
-                      className="text-sm text-slate-600 py-1"
-                    >
-                      📄 {file.name}
-                    </div>
-                  ))}
-
-                </div>
-              )}
 
             </div>
 
             <button
-              onClick={analyzeTask}
+              onClick={handleAnalyze}
               disabled={loading}
-              className="
-                mt-5
-                bg-black
-                text-white
-                px-5
-                py-3
-                rounded-lg
-                transition-all
-                duration-200
-                hover:bg-slate-800
-                hover:scale-[1.02]
-                active:scale-[0.98]
-                disabled:opacity-50
-                disabled:cursor-not-allowed
-              "
+              className="mt-6 bg-black hover:bg-slate-800 text-white px-6 py-3 rounded-xl transition-all disabled:opacity-50"
             >
               {loading
-                ? "Analyzing..."
+                ? "Analyzing Task..."
                 : "Analyze Task"}
             </button>
 
           </div>
 
-          {/* Progress Section */}
+          <div className="bg-white rounded-2xl shadow-sm p-6">
 
-          <div className="bg-white rounded-xl p-6 shadow">
-
-            <h2 className="text-xl font-semibold mb-4">
-              Progress Update
+            <h2 className="text-xl font-bold mb-5">
+              Project Snapshot
             </h2>
 
-            <textarea
-              rows={12}
-              className="w-full border rounded-lg p-3"
-              value={progress}
-              onChange={(e) =>
-                setProgress(e.target.value)
-              }
-              placeholder="Describe progress made on the task..."
+            <InfoCard
+              label="Estimated Effort"
+              value={analysis?.estimatedEffort || "--"}
             />
 
-            <button
-              className="
-                mt-5
-                bg-blue-600
-                text-white
-                px-5
-                py-3
-                rounded-lg
-                hover:bg-blue-700
-                transition-all
-                duration-200
-              "
-            >
-              Analyze Progress
-            </button>
+            <InfoCard
+              label="Deliverables"
+              value={analysis?.deliverables?.length || 0}
+            />
+
+            <InfoCard
+              label="Risks"
+              value={analysis?.risks?.length || 0}
+            />
+
+            <InfoCard
+              label="Missing Information"
+              value={
+                analysis?.missingInformation?.length || 0
+              }
+            />
 
           </div>
 
         </div>
 
-        {/* Loading Banner */}
+        {/* EXECUTIVE SUMMARY */}
 
-        {loading && (
-          <div className="bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-xl mt-6 mb-6">
-            Processing uploaded files...
-          </div>
-        )}
-
-        {/* Analysis Cards */}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
-
+        <div className="mt-8">
           <ResultCard
             title="Executive Summary"
-            content="Analysis will appear here"
+            content={analysis?.executiveSummary}
+            color="blue"
           />
+        </div>
+
+        {/* ANALYSIS */}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
 
           <ResultCard
             title="Deliverables"
-            content="Analysis will appear here"
+            content={analysis?.deliverables}
+            color="green"
           />
 
           <ResultCard
             title="Missing Information"
-            content="Analysis will appear here"
+            content={analysis?.missingInformation}
+            color="amber"
           />
 
           <ResultCard
             title="Risks"
-            content="Analysis will appear here"
+            content={analysis?.risks}
+            color="red"
           />
 
           <ResultCard
             title="Action Plan"
-            content="Analysis will appear here"
-          />
-
-          <ResultCard
-            title="Completion Status"
-            content="Analysis will appear here"
+            content={analysis?.actionPlan}
+            color="indigo"
           />
 
         </div>
 
-        {/* Upload Response */}
+        {/* EMAIL */}
 
-        {uploadResult && (
-          <div className="bg-white rounded-xl p-6 shadow mt-8">
+        <div className="bg-white rounded-2xl shadow-sm p-6 mt-8">
 
-            <h2 className="text-xl font-semibold mb-4">
-              Parsed Files Response
+          <div className="flex justify-between items-center mb-4">
+
+            <h2 className="text-xl font-bold">
+              Client Email Draft
             </h2>
 
-            <pre className="bg-slate-100 p-4 rounded-lg overflow-auto text-sm">
-              {JSON.stringify(
-                uploadResult,
-                null,
-                2
-              )}
-            </pre>
-
-          </div>
-        )}
-
-        {/* Email Generator */}
-
-        <div className="bg-white rounded-xl p-6 shadow mt-8">
-
-          <h2 className="text-xl font-semibold mb-4">
-            Email Generator
-          </h2>
-
-          <div className="flex flex-wrap gap-4 mb-4">
-
             <button
-              className="
-                bg-green-600
-                text-white
-                px-4
-                py-2
-                rounded-lg
-                hover:bg-green-700
-                transition-all
-              "
+              onClick={copyEmail}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
             >
-              Generate Client Update
-            </button>
-
-            <button
-              className="
-                bg-orange-500
-                text-white
-                px-4
-                py-2
-                rounded-lg
-                hover:bg-orange-600
-                transition-all
-              "
-            >
-              Generate Clarification Email
+              Copy Email
             </button>
 
           </div>
 
-          <textarea
-            rows={10}
-            className="w-full border rounded-lg p-3"
-            placeholder="Generated email will appear here..."
-          />
+          <div className="border rounded-xl p-5 bg-slate-50 max-h-[600px] overflow-auto">
+
+            <MarkdownContent
+              content={analysis?.clientReply}
+            />
+
+          </div>
 
         </div>
 
@@ -338,17 +257,142 @@ function App() {
   );
 }
 
-function ResultCard({ title, content }) {
-  return (
-    <div className="bg-white rounded-xl shadow hover:shadow-lg transition-all duration-200 p-5 border border-slate-200">
+function ResultCard({
+  title,
+  content,
+  color = "blue",
+}) {
 
-      <h3 className="font-semibold text-lg mb-3">
+  const colors = {
+    blue: "border-blue-500 bg-blue-50",
+    green: "border-green-500 bg-green-50",
+    amber: "border-amber-500 bg-amber-50",
+    red: "border-red-500 bg-red-50",
+    indigo: "border-indigo-500 bg-indigo-50",
+  };
+
+  return (
+    <div
+      className={`
+        rounded-2xl
+        border-l-4
+        p-6
+        shadow-sm
+        min-h-[250px]
+        ${colors[color]}
+      `}
+    >
+      <h3 className="font-bold text-lg mb-4">
         {title}
       </h3>
 
-      <p className="text-slate-600 whitespace-pre-wrap">
-        {content}
-      </p>
+      {!content ? (
+        <p className="text-slate-500">
+          Analysis will appear here
+        </p>
+      ) : Array.isArray(content) ? (
+        <div className="space-y-3">
+
+          {content.map((item, index) => (
+            <div
+              key={index}
+              className="bg-white border rounded-lg p-3"
+            >
+              <MarkdownContent
+                content={item}
+              />
+            </div>
+          ))}
+
+        </div>
+      ) : (
+        <MarkdownContent
+          content={content}
+        />
+      )}
+
+    </div>
+  );
+}
+
+function InfoCard({
+  label,
+  value,
+}) {
+  return (
+    <div className="bg-slate-50 border rounded-xl p-4 mb-3">
+
+      <div className="text-xs uppercase tracking-wide text-slate-500">
+        {label}
+      </div>
+
+      <div className="text-2xl font-bold mt-1">
+        {value}
+      </div>
+
+    </div>
+  );
+}
+
+function MarkdownContent({
+  content,
+}) {
+  return (
+    <div className="prose prose-slate max-w-none">
+
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => (
+            <p className="mb-3 leading-7 text-slate-700">
+              {children}
+            </p>
+          ),
+
+          ul: ({ children }) => (
+            <ul className="list-disc pl-6 space-y-2">
+              {children}
+            </ul>
+          ),
+
+          ol: ({ children }) => (
+            <ol className="list-decimal pl-6 space-y-2">
+              {children}
+            </ol>
+          ),
+
+          li: ({ children }) => (
+            <li className="leading-7">
+              {children}
+            </li>
+          ),
+
+          strong: ({ children }) => (
+            <strong className="font-bold text-slate-900">
+              {children}
+            </strong>
+          ),
+
+          h1: ({ children }) => (
+            <h1 className="text-2xl font-bold mb-4">
+              {children}
+            </h1>
+          ),
+
+          h2: ({ children }) => (
+            <h2 className="text-xl font-bold mb-3">
+              {children}
+            </h2>
+          ),
+
+          h3: ({ children }) => (
+            <h3 className="text-lg font-semibold mb-2">
+              {children}
+            </h3>
+          ),
+        }}
+      >
+        {content || ""}
+      </ReactMarkdown>
 
     </div>
   );
