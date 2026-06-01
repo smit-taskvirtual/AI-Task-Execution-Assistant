@@ -1,122 +1,164 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from "react";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [taskEmail, setTaskEmail] = useState("");
+  const [previousEmails, setPreviousEmails] = useState("");
+  const [progress, setProgress] = useState("");
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+    <div className="min-h-screen bg-slate-100">
+      <div className="max-w-7xl mx-auto p-6">
+
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold">
+            AI Task Execution Assistant
+          </h1>
+
+          <p className="text-slate-500 mt-2">
+            TaskVirtual Internal Productivity Tool
           </p>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+          <div className="bg-white rounded-xl p-6 shadow">
+            <h2 className="text-xl font-semibold mb-4">
+              Task Input
+            </h2>
+
+            <label className="font-medium">
+              Client Email
+            </label>
+
+            <textarea
+              rows={8}
+              className="w-full mt-2 border rounded-lg p-3"
+              value={taskEmail}
+              onChange={(e) => setTaskEmail(e.target.value)}
+            />
+
+            <div className="mt-4">
+              <label className="font-medium">
+                Previous Emails
+              </label>
+
+              <textarea
+                rows={6}
+                className="w-full mt-2 border rounded-lg p-3"
+                value={previousEmails}
+                onChange={(e) => setPreviousEmails(e.target.value)}
+              />
+            </div>
+
+            <div className="mt-4">
+              <label className="font-medium">
+                Attachments
+              </label>
+
+              <input
+                type="file"
+                multiple
+                className="block mt-2"
+              />
+            </div>
+
+            <button className="mt-5 bg-black text-white px-5 py-2 rounded-lg">
+              Analyze Task
+            </button>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow">
+            <h2 className="text-xl font-semibold mb-4">
+              Progress Update
+            </h2>
+
+            <textarea
+              rows={12}
+              className="w-full border rounded-lg p-3"
+              value={progress}
+              onChange={(e) => setProgress(e.target.value)}
+            />
+
+            <button className="mt-5 bg-blue-600 text-white px-5 py-2 rounded-lg">
+              Analyze Progress
+            </button>
+          </div>
+
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
+
+          <ResultCard
+            title="Executive Summary"
+            content="Analysis will appear here"
+          />
+
+          <ResultCard
+            title="Deliverables"
+            content="Analysis will appear here"
+          />
+
+          <ResultCard
+            title="Missing Information"
+            content="Analysis will appear here"
+          />
+
+          <ResultCard
+            title="Risks"
+            content="Analysis will appear here"
+          />
+
+          <ResultCard
+            title="Action Plan"
+            content="Analysis will appear here"
+          />
+
+          <ResultCard
+            title="Completion Status"
+            content="Analysis will appear here"
+          />
+
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow mt-8">
+
+          <h2 className="text-xl font-semibold mb-4">
+            Email Generator
+          </h2>
+
+          <div className="flex gap-4 mb-4">
+            <button className="bg-green-600 text-white px-4 py-2 rounded-lg">
+              Client Update
+            </button>
+
+            <button className="bg-orange-500 text-white px-4 py-2 rounded-lg">
+              Clarification Email
+            </button>
+          </div>
+
+          <textarea
+            rows={10}
+            className="w-full border rounded-lg p-3"
+          />
+        </div>
+
+      </div>
+    </div>
+  );
 }
 
-export default App
+function ResultCard({ title, content }) {
+  return (
+    <div className="bg-white rounded-xl shadow p-5">
+      <h3 className="font-semibold mb-3">
+        {title}
+      </h3>
+
+      <p className="text-slate-600">
+        {content}
+      </p>
+    </div>
+  );
+}
+
+export default App;
